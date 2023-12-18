@@ -1,8 +1,9 @@
 package containers
 
 import (
-	"fmt"
 	"context"
+	"fmt"
+
 	"github.com/docker/docker/api/types"
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -20,14 +21,14 @@ func ShowRunning() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	fmt.Printf("Running containers (%d): \n", len(containers))
 	for _, container := range containers {
-		fmt.Println("container ", container.Names ," ",container.ID[:10])
+		fmt.Println("container ", container.Names, " ", container.ID[:10])
 	}
 }
 
-func GetRunningContainers() []types.Container{
+func GetRunningContainers() []types.Container {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -41,6 +42,29 @@ func GetRunningContainers() []types.Container{
 	}
 
 	return containers
+}
+
+func GetStoppedContainers() []types.Container {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+	defer cli.Close()
+
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
+	if err != nil {
+		panic(err)
+	}
+
+	var stoppedContainers []types.Container
+	for _, container := range containers {
+		if container.State == "exited" {
+			stoppedContainers = append(stoppedContainers, container)
+		}
+	}
+
+	return stoppedContainers
 }
 
 func StopAllContainers() {
@@ -112,12 +136,47 @@ func ShowAllContainers() {
 		panic(err)
 	}
 
-	for _, container := range containers {
-		status := "running^stopped"
+	fmt.Printf("\nAll containers:\n")
 
-		fmt.Printf("Container ID: %s\n", container.ID[:10])
+	for _, container := range containers {
+		//status := "running^stopped"
+
+		fmt.Printf("\nContainer ID: %s\n", container.ID[:10])
 		fmt.Printf("Image: %s\n", container.Image)
-		fmt.Printf("Status: %s\n", status)
-		fmt.Println("--------------")
+		fmt.Printf("Status: %s\n", container.State)
+		fmt.Printf("\n----------------\n")
 	}
+}
+
+func ExecFunction(containerID string, command []string) error {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return err
+	}
+	defer cli.Close()
+
+	// Create an exec instance
+	execCreateResp, err := cli.ContainerExecCreate(ctx, containerID, types.ExecConfig{
+		Cmd:          command,
+		AttachStdout: true,
+		AttachStderr: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Start the exec instance
+	err = cli.ContainerExecStart(ctx, execCreateResp.ID, types.ExecStartCheck{})
+	if err != nil {
+		return err
+	}
+
+	// Wait for the exec instance to complete (optional)
+	/*_, err = cli.ContainerExecInspect(ctx, execCreateResp.ID)
+	if err != nil {
+		return err
+	}*/
+
+	return nil
 }
