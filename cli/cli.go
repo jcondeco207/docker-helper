@@ -130,10 +130,42 @@ func pickAndExec() {
 
 }
 
+func attachToContainer() {
+	runningContainers := containers.GetRunningContainers()
+
+	containersOptions := make([]string, len(runningContainers))
+
+	for i, container := range runningContainers {
+		containersOptions[i] = fmt.Sprintf("%s %s", container.Names[0], container.ID)
+	}
+
+	prompt := promptui.Select{
+		Label: "Select container",
+		Items: containersOptions,
+	}
+
+	_, result, err := prompt.Run()
+
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", err)
+	}
+
+	var id string
+	var name string
+
+	_, err = fmt.Sscanf(result, "%s %s", &name, &id)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	containers.AttachToContainer(id)
+}
+
 func pickAction() bool {
 	prompt := promptui.Select{
 		Label: "Select action:",
-		Items: []string{"Start selected containers", "Exec", "Stop selected containers", "Show running containers", "Quit"},
+		Items: []string{"Start selected containers", "Exec", "Stop selected containers", "Show running containers", "Attach to container", "Quit"},
 	}
 
 	_, result, err := prompt.Run()
@@ -152,6 +184,9 @@ func pickAction() bool {
 
 	case "Exec":
 		pickAndExec()
+
+	case "Attach to container":
+		attachToContainer()
 
 	case "Show running containers":
 		containers.ShowRunning()

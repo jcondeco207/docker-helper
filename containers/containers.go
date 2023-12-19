@@ -3,10 +3,14 @@ package containers
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/docker/docker/api/types"
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func ShowRunning() {
@@ -179,4 +183,43 @@ func ExecFunction(containerID string, command []string) error {
 	}*/
 
 	return nil
+}
+
+func AttachToContainer(containerID string) {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+	defer cli.Close()
+
+	fd := int(os.Stdin.Fd())
+	oldState, err := terminal.MakeRaw(fd)
+	if err != nil {
+		panic(err)
+	}
+	defer terminal.Restore(fd, oldState)
+
+	execConfig := types.ExecConfig{
+		Tty:          true,
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          []string{"bash"},
+	}
+
+	exec, err := cli.ContainerExecCreate(ctx, containerID, execConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	resp, err := cli.ContainerExecAttach(ctx, exec.ID, types.ExecStartCheck{})
+	if err != nil {
+		panic(err)
+	}
+
+	go io.Copy(os.Stdout, resp.Reader)
+	go io.Copy(resp.Conn, os.Stdin)
+
+	resp.Close()
+	resp.Conn.Close()
 }
