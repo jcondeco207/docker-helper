@@ -170,17 +170,22 @@ func ExecFunction(containerID string, command []string) error {
 		return err
 	}
 
+	// Attach to the exec instance
+	hijackedResponse, err := cli.ContainerExecAttach(ctx, execCreateResp.ID, types.ExecStartCheck{})
+	if err != nil {
+		return err
+	}
+	defer hijackedResponse.Close()
+
 	// Start the exec instance
 	err = cli.ContainerExecStart(ctx, execCreateResp.ID, types.ExecStartCheck{})
 	if err != nil {
 		return err
 	}
 
-	// Wait for the exec instance to complete (optional)
-	/*_, err = cli.ContainerExecInspect(ctx, execCreateResp.ID)
-	if err != nil {
-		return err
-	}*/
+	// Read the output
+	stdout, _ := io.ReadAll(hijackedResponse.Reader)
+	fmt.Println(string(stdout))
 
 	return nil
 }

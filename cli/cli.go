@@ -164,7 +164,7 @@ func attachToContainer() {
 
 func pickAction() bool {
 	prompt := promptui.Select{
-		Label: "Select action:",
+		Label: "Select action",
 		Items: []string{"Start selected containers", "Exec", "Stop selected containers", "Show running containers", "Attach to container", "Quit"},
 	}
 
