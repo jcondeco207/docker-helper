@@ -132,7 +132,7 @@ func pickAndExec() {
 
 func pickAction() bool {
 	prompt := promptui.Select{
-		Label: "Select Day",
+		Label: "Select action:",
 		Items: []string{"Start selected containers", "Exec", "Stop selected containers", "Show running containers", "Quit"},
 	}
 
