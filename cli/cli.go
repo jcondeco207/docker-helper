@@ -182,6 +182,7 @@ func pickAction() bool {
 	prompt := promptui.Select{
 		Label: "Select action",
 		Items: []string{"Start selected containers",
+			"Show containers",
 			"Exec",
 			"Stop selected containers",
 			"Delete selected containers",
@@ -200,6 +201,9 @@ func pickAction() bool {
 
 	case "Start selected containers":
 		pickAndStartContainer()
+
+	case "Show containers":
+		containers.ShowAllContainers()
 
 	case "Stop selected containers":
 		pickAndStopContainer()
