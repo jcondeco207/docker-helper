@@ -87,6 +87,22 @@ func pickAndStopContainer() {
 	}
 }
 
+func pickAndDeleteContainer() {
+	answers := pickStoppedContainers()
+	for _, option := range answers {
+		var id string
+		var name string
+
+		_, err := fmt.Sscanf(option, "%s %s", &name, &id)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		containers.DeleteContainer(id)
+	}
+}
+
 func pickAndExec() {
 	runningContainers := containers.GetRunningContainers()
 
@@ -165,7 +181,13 @@ func attachToContainer() {
 func pickAction() bool {
 	prompt := promptui.Select{
 		Label: "Select action",
-		Items: []string{"Start selected containers", "Exec", "Stop selected containers", "Show running containers", "Attach to container", "Quit"},
+		Items: []string{"Start selected containers",
+			"Exec",
+			"Stop selected containers",
+			"Delete selected containers",
+			"Show running containers",
+			"Attach to container",
+			"Quit"},
 	}
 
 	_, result, err := prompt.Run()
@@ -181,6 +203,9 @@ func pickAction() bool {
 
 	case "Stop selected containers":
 		pickAndStopContainer()
+
+	case "Delete selected containers":
+		pickAndDeleteContainer()
 
 	case "Exec":
 		pickAndExec()

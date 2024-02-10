@@ -9,8 +9,6 @@ import (
 	"github.com/docker/docker/api/types"
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 func ShowRunning() {
@@ -127,6 +125,21 @@ func StopContainer(containerID string) {
 	fmt.Println("container stopped")
 }
 
+func DeleteContainer(containerID string) {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+	defer cli.Close()
+
+	fmt.Print("Removing container ", containerID[:10], "... ")
+	if err := cli.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{}); err != nil {
+		panic(err)
+	}
+	fmt.Println("container deleted")
+}
+
 func ShowAllContainers() {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -190,41 +203,42 @@ func ExecFunction(containerID string, command []string) error {
 	return nil
 }
 
-func AttachToContainer(containerID string) {
+func AttachToContainer(containerID string) error {
 	ctx := context.Background()
+
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		return err
 	}
-	defer cli.Close()
 
-	fd := int(os.Stdin.Fd())
-	oldState, err := terminal.MakeRaw(fd)
+	// Attach to the container
+	resp, err := cli.ContainerAttach(ctx, containerID, types.ContainerAttachOptions{
+		Stream: true,
+		Stdin:  true,
+		Stdout: true,
+		Stderr: true,
+	})
 	if err != nil {
-		panic(err)
+		return err
 	}
-	defer terminal.Restore(fd, oldState)
+	defer resp.Close()
 
-	execConfig := types.ExecConfig{
-		Tty:          true,
-		AttachStdout: true,
-		AttachStderr: true,
-		Cmd:          []string{"bash"},
-	}
+	// Redirect the container's output to the application's stdout and stderr
+	go func() {
+		_, _ = io.Copy(os.Stdout, resp.Reader)
+	}()
 
-	exec, err := cli.ContainerExecCreate(ctx, containerID, execConfig)
-	if err != nil {
-		panic(err)
-	}
-
-	resp, err := cli.ContainerExecAttach(ctx, exec.ID, types.ExecStartCheck{})
-	if err != nil {
-		panic(err)
+	// Wait for the user to exit the terminal
+	waitCh, errCh := cli.ContainerWait(ctx, containerID, containertypes.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return err
+		}
+	case <-waitCh:
 	}
 
-	go io.Copy(os.Stdout, resp.Reader)
-	go io.Copy(resp.Conn, os.Stdin)
+	fmt.Println("You have exited the container terminal.")
 
-	resp.Close()
-	resp.Conn.Close()
+	return nil
 }
