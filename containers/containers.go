@@ -9,6 +9,7 @@ import (
 	"github.com/docker/docker/api/types"
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/rodaine/table"
 )
 
 func ShowRunning() {
@@ -153,15 +154,10 @@ func ShowAllContainers() {
 		panic(err)
 	}
 
-	fmt.Printf("\nAll containers:\n")
-
+	// Output in a table
+	containersTable := table.New("ID", "Image", "State")
 	for _, container := range containers {
-		//status := "running^stopped"
-
-		fmt.Printf("\nContainer ID: %s\n", container.ID[:10])
-		fmt.Printf("Image: %s\n", container.Image)
-		fmt.Printf("Status: %s\n", container.State)
-		fmt.Printf("\n----------------\n")
+		containersTable.AddRow(container.ID[:10], container.Image, container.State)
 	}
 }
 
@@ -178,13 +174,13 @@ func ShowAllImages() {
 		panic(err)
 	}
 
-	fmt.Printf("\nAll images:\n")
+	imagesTable := table.New("Name", "ID", "Containers", "Size")
 
 	for _, image := range images {
-		fmt.Printf("\nID: %s\n", image.ID[:10])
-		fmt.Printf("Name: %s\n", image.RepoTags[0])
-		fmt.Printf("\n----------------\n")
+		imagesTable.AddRow(image.RepoTags[0], image.ID[:10], image.Containers, image.Size)
 	}
+
+	imagesTable.Print()
 }
 
 func ExecFunction(containerID string, command []string) error {

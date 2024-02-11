@@ -178,8 +178,9 @@ func attachToContainer() {
 	containers.AttachToContainer(id)
 }
 
-func pickAction() bool {
+func pickContainersAction() bool {
 	prompt := promptui.Select{
+		Size:  10,
 		Label: "Select action",
 		Items: []string{"Start selected containers",
 			"Show containers",
@@ -189,7 +190,7 @@ func pickAction() bool {
 			"Delete selected containers",
 			"Show running containers",
 			"Attach to container",
-			"Quit"},
+			"Return"},
 	}
 
 	_, result, err := prompt.Run()
@@ -224,17 +225,49 @@ func pickAction() bool {
 	case "Show running containers":
 		containers.ShowRunning()
 
-	case "Quit":
-		return false
+	case "Return":
+		return true
 	}
 
+	return false
+}
+
+func pickContext() bool {
+	cont := true
+	for cont {
+		prompt := promptui.Select{
+			Size:  10,
+			Label: "Select context",
+			Items: []string{"Images",
+				"Containers",
+				"Exit"},
+		}
+
+		_, result, err := prompt.Run()
+
+		if err != nil {
+			fmt.Printf("Prompt failed %v\n", err)
+		}
+
+		switch result {
+
+		case "Images":
+			cont = pickContainersAction()
+
+		case "Containers":
+			cont = pickContainersAction()
+
+		case "Exit":
+			return false
+		}
+	}
 	return true
 }
 
 func main() {
 	cont := true
 	for cont {
-		cont = pickAction()
+		cont = pickContext()
 		fmt.Printf("\n\n")
 	}
 }
