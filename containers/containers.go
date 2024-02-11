@@ -141,6 +141,21 @@ func DeleteContainer(containerID string) {
 	fmt.Println("container deleted")
 }
 
+func DeleteImage(imageID string) {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+	defer cli.Close()
+
+	fmt.Print("Removing image ", imageID[:10], "... ")
+	if _, err := cli.ImageRemove(ctx, imageID, types.ImageRemoveOptions{}); err != nil {
+		panic(err)
+	}
+	fmt.Println("Image deleted")
+}
+
 func ShowAllContainers() {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -181,6 +196,22 @@ func ShowAllImages() {
 	}
 
 	imagesTable.Print()
+}
+
+func GetAllImages() []types.ImageSummary {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+	defer cli.Close()
+
+	images, err := cli.ImageList(ctx, types.ImageListOptions{All: true})
+	if err != nil {
+		panic(err)
+	}
+
+	return images
 }
 
 func ExecFunction(containerID string, command []string) error {

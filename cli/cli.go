@@ -35,7 +35,23 @@ func pickRunningContainers() []string {
 	)
 
 	return answers
+}
 
+func pickImages() []string {
+	images := containers.GetAllImages()
+
+	imagesOptions := make([]string, len(images))
+
+	for i, image := range images {
+		imagesOptions[i] = fmt.Sprintf("%s %s", image.RepoTags[0], image.ID)
+	}
+
+	answers := Checkboxes(
+		"Images:",
+		imagesOptions,
+	)
+
+	return answers
 }
 
 func pickStoppedContainers() []string {
@@ -52,7 +68,6 @@ func pickStoppedContainers() []string {
 	)
 
 	return answers
-
 }
 
 func pickAndStartContainer() {
@@ -103,6 +118,22 @@ func pickAndDeleteContainer() {
 	}
 }
 
+func pickAndDeleteImage() {
+	answers := pickImages()
+	for _, option := range answers {
+		var id string
+		var name string
+
+		_, err := fmt.Sscanf(option, "%s %s", &name, &id)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		containers.DeleteImage(id)
+	}
+}
+
 func pickAndExec() {
 	runningContainers := containers.GetRunningContainers()
 
@@ -143,7 +174,6 @@ func pickAndExec() {
 	cmd := strings.Fields(command)
 
 	containers.ExecFunction(id, cmd)
-
 }
 
 func attachToContainer() {
@@ -238,6 +268,7 @@ func pickImagesAction() bool {
 		Label: "Select action",
 		Items: []string{
 			"Show images",
+			"Delete images",
 			"Return"},
 	}
 
@@ -251,6 +282,9 @@ func pickImagesAction() bool {
 
 	case "Show images":
 		containers.ShowAllImages()
+
+	case "Delete images":
+		pickAndDeleteImage()
 
 	case "Return":
 		return true
