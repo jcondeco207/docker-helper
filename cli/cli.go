@@ -232,6 +232,33 @@ func pickContainersAction() bool {
 	return false
 }
 
+func pickImagesAction() bool {
+	prompt := promptui.Select{
+		Size:  10,
+		Label: "Select action",
+		Items: []string{
+			"Show images",
+			"Return"},
+	}
+
+	_, result, err := prompt.Run()
+
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", err)
+	}
+
+	switch result {
+
+	case "Show images":
+		containers.ShowAllImages()
+
+	case "Return":
+		return true
+	}
+
+	return false
+}
+
 func pickContext() bool {
 	cont := true
 	for cont {
@@ -252,7 +279,7 @@ func pickContext() bool {
 		switch result {
 
 		case "Images":
-			cont = pickContainersAction()
+			cont = pickImagesAction()
 
 		case "Containers":
 			cont = pickContainersAction()
