@@ -183,6 +183,7 @@ func pickAction() bool {
 		Label: "Select action",
 		Items: []string{"Start selected containers",
 			"Show containers",
+			"Show images",
 			"Exec",
 			"Stop selected containers",
 			"Delete selected containers",
@@ -201,6 +202,9 @@ func pickAction() bool {
 
 	case "Start selected containers":
 		pickAndStartContainer()
+
+	case "Show images":
+		containers.ShowAllImages()
 
 	case "Show containers":
 		containers.ShowAllContainers()

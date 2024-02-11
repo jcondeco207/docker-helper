@@ -165,6 +165,28 @@ func ShowAllContainers() {
 	}
 }
 
+func ShowAllImages() {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+	defer cli.Close()
+
+	images, err := cli.ImageList(ctx, types.ImageListOptions{All: true})
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("\nAll images:\n")
+
+	for _, image := range images {
+		fmt.Printf("\nID: %s\n", image.ID[:10])
+		fmt.Printf("Name: %s\n", image.RepoTags[0])
+		fmt.Printf("\n----------------\n")
+	}
+}
+
 func ExecFunction(containerID string, command []string) error {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
