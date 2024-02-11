@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/jcondeco207/docker-helper/containers"
+	"github.com/jcondeco207/docker-helper/images"
 	"github.com/manifoldco/promptui"
 )
 
@@ -38,7 +39,7 @@ func pickRunningContainers() []string {
 }
 
 func pickImages() []string {
-	images := containers.GetAllImages()
+	images := images.GetAllImages()
 
 	imagesOptions := make([]string, len(images))
 
@@ -130,7 +131,7 @@ func pickAndDeleteImage() {
 			return
 		}
 
-		containers.DeleteImage(id)
+		images.DeleteImage(id)
 	}
 }
 
@@ -235,7 +236,7 @@ func pickContainersAction() bool {
 		pickAndStartContainer()
 
 	case "Show images":
-		containers.ShowAllImages()
+		images.ShowAllImages()
 
 	case "Show containers":
 		containers.ShowAllContainers()
@@ -281,7 +282,7 @@ func pickImagesAction() bool {
 	switch result {
 
 	case "Show images":
-		containers.ShowAllImages()
+		images.ShowAllImages()
 
 	case "Delete images":
 		pickAndDeleteImage()
