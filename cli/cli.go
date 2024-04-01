@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"strings"
-
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/jcondeco207/docker-helper/containers"
 	"github.com/jcondeco207/docker-helper/images"
+	"github.com/jcondeco207/docker-helper/volumes"
 	"github.com/manifoldco/promptui"
 )
 
@@ -17,7 +17,6 @@ func Checkboxes(label string, opts []string) []string {
 		Options: opts,
 	}
 	survey.AskOne(prompt, &res)
-
 	return res
 }
 
@@ -215,7 +214,6 @@ func pickContainersAction() bool {
 		Label: "Select action",
 		Items: []string{"Start selected containers",
 			"Show containers",
-			"Show images",
 			"Exec",
 			"Stop selected containers",
 			"Delete selected containers",
@@ -234,9 +232,6 @@ func pickContainersAction() bool {
 
 	case "Start selected containers":
 		pickAndStartContainer()
-
-	case "Show images":
-		images.ShowAllImages()
 
 	case "Show containers":
 		containers.ShowAllContainers()
@@ -294,6 +289,37 @@ func pickImagesAction() bool {
 	return false
 }
 
+func pickVolumesAction() bool {
+	prompt := promptui.Select{
+		Size:  10,
+		Label: "Select action",
+		Items: []string{
+			"Show volumes",
+			"Delete volumes",
+			"Return"},
+	}
+
+	_, result, err := prompt.Run()
+
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", err)
+	}
+
+	switch result {
+
+	case "Show volumes":
+		volumes.ShowAllVolumes()
+
+	// case "Delete volumes":
+	// 	pickAndDeleteImage()
+
+	case "Return":
+		return true
+	}
+
+	return false
+}
+
 func pickContext() bool {
 	cont := true
 	for cont {
@@ -302,6 +328,7 @@ func pickContext() bool {
 			Label: "Select context",
 			Items: []string{"Images",
 				"Containers",
+				"Volumes",
 				"Exit"},
 		}
 
@@ -318,6 +345,9 @@ func pickContext() bool {
 
 		case "Containers":
 			cont = pickContainersAction()
+
+		case "Volumes":
+			cont = pickVolumesAction()
 
 		case "Exit":
 			return false
@@ -336,7 +366,7 @@ func main() {
                                               |_|
 
                                                 by João Condeço
-	
+
 	`
 	fmt.Print(header)
 	cont := true
