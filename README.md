@@ -8,22 +8,7 @@ Custom CLI tool made with the purpose of managing my docker containers via termi
 
 ## Usage
 
-### Option 1
-
-```shell
-go run ./cli
-```
-
-### Option 2
-
-```shell
-cd cli
-```
-
-```shell
-go build
-```
-
-```shell
-./cli
-```
+  make build  - Build the docker-helper binary
+  make run    - Run the docker-helper binary
+  make clean  - Clean up the built binary
+  make help   - Display this help message
